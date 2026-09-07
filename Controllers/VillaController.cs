@@ -62,7 +62,7 @@ namespace WebAPIDemoNew.Controllers
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status500InternalServerError)]
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status400BadRequest)]
-		public async Task<ActionResult<ApiResponse<VillaDTO>>> CreateVilla(CreateVillaDTO villaDTO)
+		public async Task<ActionResult<ApiResponse<VillaDTO>>> CreateVilla([FromBody]CreateVillaDTO villaDTO)
 		{
 			try
 			{
@@ -100,7 +100,7 @@ namespace WebAPIDemoNew.Controllers
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(ApiResponse<VillaDTO>), StatusCodes.Status404NotFound)]
-		public async Task<ActionResult<ApiResponse<VillaDTO>>> UpdateVilla(int id,UpdateVillaDTO villaDTO)
+		public async Task<ActionResult<ApiResponse<VillaDTO>>> UpdateVilla(int id, [FromBody] UpdateVillaDTO villaDTO)
 		{
 			try
 			{
