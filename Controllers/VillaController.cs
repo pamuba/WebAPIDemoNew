@@ -27,9 +27,48 @@ namespace WebAPIDemoNew.Controllers
 		//[Authorize(Roles = "Admin")]
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<VillaDTO>>>> GetVillas()
+        public async Task<ActionResult<ApiResponse<IEnumerable<VillaDTO>>>> GetVillas([FromQuery]string? filterBy,
+			[FromQuery]string?filterQuery)
         {
-			var villas = await _db.Villas.ToListAsync();
+			var villaQuery = _db.Villas.AsQueryable();
+			if (!string.IsNullOrEmpty(filterQuery) && !string.IsNullOrEmpty(filterBy)) {
+				switch (filterBy.ToLower()) {
+					case "name":
+						villaQuery = villaQuery.Where(u => u.Name.ToLower().Contains(filterQuery.ToLower()));
+						break;
+
+					case "details":
+						villaQuery = villaQuery.Where(u => u.Details.ToLower().Contains(filterQuery.ToLower()));
+						break;
+
+					case "rate":
+						if (double.TryParse(filterQuery, out double rate)) {
+							villaQuery = villaQuery.Where(u => u.Rate == rate);
+						}
+						break;
+
+					case "minrate":
+						if (double.TryParse(filterQuery, out double minrate))
+						{
+							villaQuery = villaQuery.Where(u => u.Rate >= minrate);
+						}
+						break;
+					case "maxrate":
+						if (double.TryParse(filterQuery, out double maxrate))
+						{
+							villaQuery = villaQuery.Where(u => u.Rate <= maxrate);
+						}
+						break;
+					case "occupancy":
+						if (double.TryParse(filterQuery, out double occupancy))
+						{
+							villaQuery = villaQuery.Where(u => u.Occupancy == occupancy);
+						}
+						break;
+				}
+			}
+			
+			var villas = await villaQuery.ToListAsync();
 			var dtoResponse = _mapper.Map<List<VillaDTO>>(villas);
 			var response = ApiResponse<IEnumerable<VillaDTO>>.OK(dtoResponse, "Villas retrieved Successfully");
 			return Ok(response);
