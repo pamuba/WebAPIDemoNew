@@ -28,7 +28,7 @@ namespace WebAPIDemoNew.Controllers
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse<IEnumerable<VillaDTO>>>> GetVillas([FromQuery]string? filterBy,
-			[FromQuery]string?filterQuery)
+			[FromQuery]string?filterQuery, [FromQuery]string? sortBy, [FromQuery]string? sortOrder="asc")
         {
 			var villaQuery = _db.Villas.AsQueryable();
 			if (!string.IsNullOrEmpty(filterQuery) && !string.IsNullOrEmpty(filterBy)) {
@@ -66,6 +66,29 @@ namespace WebAPIDemoNew.Controllers
 						}
 						break;
 				}
+			}
+
+			//implement the sorting code 
+			if (!string.IsNullOrEmpty(sortBy))
+			{
+				var isDescending = sortOrder?.ToLower() == "desc";
+				villaQuery = sortBy.ToLower() switch
+				{
+					"name" => isDescending ? villaQuery.OrderByDescending(u => u.Name)
+										   : villaQuery.OrderBy(u => u.Name),
+					"rate" => isDescending ? villaQuery.OrderByDescending(u => u.Rate)
+										   : villaQuery.OrderBy(u => u.Rate),
+					"occupancy" => isDescending ? villaQuery.OrderByDescending(u => u.Occupancy)
+										   : villaQuery.OrderBy(u => u.Occupancy),
+					"sqft" => isDescending ? villaQuery.OrderByDescending(u => u.Sqft)
+										   : villaQuery.OrderBy(u => u.Sqft),
+					"id" => isDescending ? villaQuery.OrderByDescending(u => u.Id)
+										   : villaQuery.OrderBy(u => u.Id)
+
+				};
+			}
+			else {
+				villaQuery = villaQuery.OrderBy(u => u.Id);
 			}
 			
 			var villas = await villaQuery.ToListAsync();
