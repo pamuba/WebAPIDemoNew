@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace WebAPIDemoNew.Controllers
 {
     [Route("api/[controller]")]
     //[ApiController]
-	//[Authorize(Roles = "Customer, Admin")]
+	[Authorize(Roles = "Customer, Admin")]
 	public class VillaController : ControllerBase
     {
         private readonly ApplicationDBContext _db;
@@ -28,8 +29,13 @@ namespace WebAPIDemoNew.Controllers
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiResponse<IEnumerable<VillaDTO>>),StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse<IEnumerable<VillaDTO>>>> GetVillas([FromQuery]string? filterBy,
-			[FromQuery]string?filterQuery, [FromQuery]string? sortBy, [FromQuery]string? sortOrder="asc")
+			[FromQuery]string?filterQuery, [FromQuery]string? sortBy, [FromQuery]string? sortOrder="asc",
+			[FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+			if (page < 1) page = 1;
+			if (pageSize < 1) pageSize = 10;
+			if (pageSize > 100) pageSize = 100;
+
 			var villaQuery = _db.Villas.AsQueryable();
 			if (!string.IsNullOrEmpty(filterQuery) && !string.IsNullOrEmpty(filterBy)) {
 				switch (filterBy.ToLower()) {
@@ -90,10 +96,35 @@ namespace WebAPIDemoNew.Controllers
 			else {
 				villaQuery = villaQuery.OrderBy(u => u.Id);
 			}
-			
-			var villas = await villaQuery.ToListAsync();
+
+			//page 5 pageSize 10, skip = 40
+			int skip = (page - 1) * pageSize;
+
+			var totalCount = await villaQuery.CountAsync(); //5.4, pageSize:10
+			var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+			var villas = await villaQuery.Skip(skip).Take(pageSize).ToListAsync();
 			var dtoResponse = _mapper.Map<List<VillaDTO>>(villas);
-			var response = ApiResponse<IEnumerable<VillaDTO>>.OK(dtoResponse, "Villas retrieved Successfully");
+			
+
+			var messageBuilder = new StringBuilder();
+			messageBuilder.Append($"Successfully retrieved {dtoResponse.Count} villa(s).");
+			messageBuilder.Append($" (Page {page} of {totalPages}), {totalCount} total records.");
+
+			if (!string.IsNullOrEmpty(filterQuery) && !string.IsNullOrEmpty(filterBy)) { 
+				messageBuilder.Append($" Filtered by - '{filterBy}' : '{filterQuery}'");
+			}
+			if (!string.IsNullOrEmpty(sortBy))
+			{
+				messageBuilder.Append($" Sorted by by '{sortBy}' : '{sortOrder?.ToLower() ?? "asc"}'");
+			}
+
+			Response.Headers.Append("X-Pageination-CurreentPage", page.ToString());
+			Response.Headers.Append("X-Pageination-PageSize", pageSize.ToString());
+			Response.Headers.Append("X-Pageination-TotalCount", totalCount.ToString());
+			Response.Headers.Append("X-Pageination-TotalPages", totalPages.ToString());
+
+			var response = ApiResponse<IEnumerable<VillaDTO>>.OK(dtoResponse, messageBuilder.ToString());
 			return Ok(response);
         }
         [HttpGet("{id:int}")]

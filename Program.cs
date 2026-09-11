@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WEBAPI_DTOS.DTO;
@@ -12,6 +13,11 @@ using WebAPIDemoNew.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("ApiSettings")["Secret"]);
+
+//builder.Services.AddIdentity<ApplicationUser, IdentityRole>();
+
+builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDBContext>();
 
 // Add services to the container.
 builder.Services.AddAuthentication(option => {
@@ -36,6 +42,7 @@ builder.Services.AddAutoMapper(options => {
     options.CreateMap<Villa, VillaDTO>().ReverseMap();
     options.CreateMap<VillaDTO, UpdateVillaDTO>().ReverseMap();
     options.CreateMap<User, UserDto>().ReverseMap(); 
+    options.CreateMap<ApplicationUser, UserDto>().ReverseMap(); 
     options.CreateMap<VillaAmenities, VillaAmenetiesCreateDTO>().ReverseMap(); 
     options.CreateMap<VillaAmenities, VillaAmenitiesUpdateDTO>().ReverseMap(); 
     options.CreateMap<VillaAmenities, VIllaAmenetiesDTO>()

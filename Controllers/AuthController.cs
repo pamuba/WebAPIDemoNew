@@ -55,11 +55,11 @@ namespace WebAPIDemoNew.Controllers
 		}
 		[HttpPost]
 		[Route("login")]
-		[ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ApiResponse<TokenDTO>), StatusCodes.Status201Created)]
 		[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
 		[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
-		public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginRequestDto  loginRequestDto)
+		public async Task<ActionResult<ApiResponse<TokenDTO>>> Login([FromBody] LoginRequestDto  loginRequestDto)
 		{
 			try
 			{
@@ -75,7 +75,7 @@ namespace WebAPIDemoNew.Controllers
 					return BadRequest(ApiResponse<object>.BadRequest("Login Failed"));
 				}
 				//auth service
-				var response = ApiResponse<LoginResponseDto>.OK(loginResponse, "Loggedin Successfully");
+				var response = ApiResponse<TokenDTO>.OK(loginResponse, "Loggedin Successfully");
 				return Ok(response);
 			}
 			catch (Exception ex)
